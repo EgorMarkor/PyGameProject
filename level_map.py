@@ -7,7 +7,3 @@ def load_level(filename):
         s = [j for j in f[i]]
         board.append(s)
     return board
-
-
-for elem in load_level('map.txt'):
-    print(elem)
