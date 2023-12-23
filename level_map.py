@@ -7,3 +7,4 @@ def load_level(filename):
         s = [j for j in f[i]]
         board.append(s)
     return board
+#подгрузка уровня из текстового файла
