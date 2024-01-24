@@ -61,12 +61,22 @@ class GameBoard:
     def get_color(self):
         return (152, 251, 152)
 
+    def on_crossrotes(self):
+        x = (self.pc.pos[0] - self.left) // self.cell_size
+        y = (self.pc.pos[1] - self.top) // self.cell_size
+        frst = x - 1 >= 0 and self.board[y][x - 1] != 'X'
+        scnd = x + 1 < self.width and self.board[y][x + 1] != 'X'
+        trd = y - 1 >= 0 and self.board[y - 1][x] != 'X'
+        forth = y + 1 < self.height and self.board[y + 1][x] != 'X'
+        return (frst + scnd + trd + forth >= 2) and (self.pc.pos[0] - 10)%20 == 0 and (self.pc.pos[1]-10)%20 == 0
+
     def print_board(self, screen):
         for i in range(self.height):
             for j in range(self.width):
                 if self.points[i][j]:
                     pygame.draw.circle(screen, color='black',
-                                       center=((self.top + j * self.cell_size+10, self.left + i * self.cell_size+10)),
+                                       center=(
+                                           (self.top + j * self.cell_size + 10, self.left + i * self.cell_size + 10)),
                                        radius=4)
         if self.pc.direct == 1:
             x = (self.pc.pos[0] - self.left + 10) // self.cell_size
@@ -96,7 +106,7 @@ class GameBoard:
         y = (self.pc.pos[1] - self.top) // self.cell_size
         if self.points[y][x]:
             self.points[y][x] = 0
-            self.pc.score+=1
+            self.pc.score += 1
         for h in range(self.height):
             for w in range(self.width):
                 if self.board[h][w] == 'X':
@@ -132,39 +142,46 @@ class GameBoard:
 brd = GameBoard()
 fps = 50  # количество кадров в секунду
 clock = pygame.time.Clock()
+cnt = 0
 while running:
-    print(brd.pc.score)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Проверка клика по значку
-            if icon.get_rect(topleft=(10, 10)).collidepoint(event.pos):
-                # Включение/выключение музыки
-                if music_on:
-                    pygame.mixer.music.pause()
-                    icon = icon_off
-                else:
-                    pygame.mixer.music.unpause()
-                    icon = icon_on
-                music_on = not music_on
+    if brd.pc.is_die:
+        pass
+    else:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Проверка клика по значку
+                if icon.get_rect(topleft=(10, 10)).collidepoint(event.pos):
+                    # Включение/выключение музыки
+                    if music_on:
+                        pygame.mixer.music.pause()
+                        icon = icon_off
+                    else:
+                        pygame.mixer.music.unpause()
+                        icon = icon_on
+                    music_on = not music_on
 
-        elif event.type == pygame.KEYDOWN and event.key in [100, 1073741903]:
-            brd.pc.direct = 1
-        elif event.type == pygame.KEYDOWN and event.key in [119, 1073741906]:
-            brd.pc.direct = 2
-        elif event.type == pygame.KEYDOWN and event.key in [97, 1073741904]:
-            brd.pc.direct = 3
-        elif event.type == pygame.KEYDOWN and event.key in [115, 1073741905]:
-            brd.pc.direct = 4
+            elif event.type == pygame.KEYDOWN and event.key in [100, 1073741903]:
+                if brd.on_crossrotes() or brd.pc.direct == 3:
+                    brd.pc.direct = 1
+            elif event.type == pygame.KEYDOWN and event.key in [119, 1073741906]:
+                if brd.on_crossrotes() or brd.pc.direct == 4:
+                    brd.pc.direct = 2
+            elif event.type == pygame.KEYDOWN and event.key in [97, 1073741904]:
+                if brd.on_crossrotes() or brd.pc.direct == 1:
+                    brd.pc.direct = 3
+            elif event.type == pygame.KEYDOWN and event.key in [115, 1073741905]:
+                if brd.on_crossrotes() or brd.pc.direct == 2:
+                    brd.pc.direct = 4
 
-    # Отрисовка экрана
-    screen.fill(pygame.Color('white'))
-    screen.blit(icon, (10, 10))
-    screen.blit(hearticon, (720, 550))
-    screen.blit(hearticon, (690, 550))
-    screen.blit(hearticon, (750, 550))
-    brd.print_board(screen)
+        # Отрисовка экрана
+        screen.fill(pygame.Color('white'))
+        screen.blit(icon, (10, 10))
+        screen.blit(hearticon, (720, 550))
+        screen.blit(hearticon, (690, 550))
+        screen.blit(hearticon, (750, 550))
+        brd.print_board(screen)
     # Обновление экрана
     pygame.display.flip()
     clock.tick(fps)
