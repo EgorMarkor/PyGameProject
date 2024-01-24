@@ -37,7 +37,8 @@ running = True
 class Pacman:
     def __init__(self, l, r):
         self.pos = (l, r)
-        self.direct = 1
+        self.direct = 4
+        self.score = 0
 
 
 class GameBoard:
@@ -46,6 +47,8 @@ class GameBoard:
         self.db = load_level('map2.txt')
         self.width = len(self.board[0])
         self.height = len(self.board)
+        self.points = [[1 if self.board[j][i] != 'X' else 0 for i in range(self.width)] for j in range(self.height)]
+
         self.clrs = [[None for i in range(self.width)] for j in range(self.height)]
         for i in range(self.height):
             for j in range(self.width):
@@ -59,12 +62,41 @@ class GameBoard:
         return (152, 251, 152)
 
     def print_board(self, screen):
+        for i in range(self.height):
+            for j in range(self.width):
+                if self.points[i][j]:
+                    pygame.draw.circle(screen, color='black',
+                                       center=((self.top + j * self.cell_size+10, self.left + i * self.cell_size+10)),
+                                       radius=4)
         if self.pc.direct == 1:
-            y = (self.pc.pos[0]-self.top+10) // self.cell_size
-            x = (self.pc.pos[1]-self.left) // self.cell_size
-            print(y,x,self.board[y][x])
-            if self.board[x][y] != 'X':
+            x = (self.pc.pos[0] - self.left + 10) // self.cell_size
+            y = (self.pc.pos[1] - self.top) // self.cell_size
+            if (x, y) == (28, 14):
+                self.pc.pos = (self.pc.pos[0] - self.cell_size * 27, self.pc.pos[1])
+            elif self.board[y][x] != 'X':
                 self.pc.pos = (self.pc.pos[0] + 2, self.pc.pos[1])
+        elif self.pc.direct == 2:
+            x = (self.pc.pos[0] - self.left) // self.cell_size
+            y = (self.pc.pos[1] - self.top - 12) // self.cell_size
+            if self.board[y][x] != 'X':
+                self.pc.pos = (self.pc.pos[0], self.pc.pos[1] - 2)
+        elif self.pc.direct == 3:
+            x = (self.pc.pos[0] - self.left - 12) // self.cell_size
+            y = (self.pc.pos[1] - self.top) // self.cell_size
+            if (x, y) == (-1, 14):
+                self.pc.pos = (self.pc.pos[0] + self.cell_size * 27, self.pc.pos[1])
+            elif self.board[y][x] != 'X':
+                self.pc.pos = (self.pc.pos[0] - 2, self.pc.pos[1])
+        elif self.pc.direct == 4:
+            x = (self.pc.pos[0] - self.left) // self.cell_size
+            y = (self.pc.pos[1] - self.top + 10) // self.cell_size
+            if self.board[y][x] != 'X':
+                self.pc.pos = (self.pc.pos[0], self.pc.pos[1] + 2)
+        x = (self.pc.pos[0] - self.left) // self.cell_size
+        y = (self.pc.pos[1] - self.top) // self.cell_size
+        if self.points[y][x]:
+            self.points[y][x] = 0
+            self.pc.score+=1
         for h in range(self.height):
             for w in range(self.width):
                 if self.board[h][w] == 'X':
@@ -101,6 +133,7 @@ brd = GameBoard()
 fps = 50  # количество кадров в секунду
 clock = pygame.time.Clock()
 while running:
+    print(brd.pc.score)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -115,6 +148,15 @@ while running:
                     pygame.mixer.music.unpause()
                     icon = icon_on
                 music_on = not music_on
+
+        elif event.type == pygame.KEYDOWN and event.key in [100, 1073741903]:
+            brd.pc.direct = 1
+        elif event.type == pygame.KEYDOWN and event.key in [119, 1073741906]:
+            brd.pc.direct = 2
+        elif event.type == pygame.KEYDOWN and event.key in [97, 1073741904]:
+            brd.pc.direct = 3
+        elif event.type == pygame.KEYDOWN and event.key in [115, 1073741905]:
+            brd.pc.direct = 4
 
     # Отрисовка экрана
     screen.fill(pygame.Color('white'))
